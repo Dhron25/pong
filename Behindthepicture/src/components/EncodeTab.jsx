@@ -1,6 +1,6 @@
+import { Download, Lock, Type, Image as ImageIcon, EyeOff } from 'lucide-react';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Lock, Type, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import FileUpload from './FileUpload';
 import { useSteganography } from '../context/SteganographyContext';
