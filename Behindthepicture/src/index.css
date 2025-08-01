@@ -8,7 +8,8 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 min-h-screen font-sans antialiased;
+    /* REMOVED the static background here. We will apply it in App.jsx */
+    @apply min-h-screen font-sans antialiased;
     background-attachment: fixed;
   }
 }
