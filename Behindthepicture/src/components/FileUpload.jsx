@@ -76,3 +76,76 @@ const FileUpload = ({ type }) => {
             onDragOver={handleDragOver}
             onClick={() => fileInputRef.current?.click()}
           >
+            <motion.div
+              className="flex flex-col items-center gap-4"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <div className="p-4 bg-white/10 rounded-full">
+                <Upload className="w-8 h-8 text-white/70" />
+              </div>
+              <div>
+                <p className="text-white font-semibold text-lg mb-2">
+                  Drop your image here or click to browse
+                </p>
+                <p className="text-white/60 text-sm">
+                  Supports PNG, JPG, BMP • Max 10MB
+                </p>
+              </div>
+            </motion.div>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileSelect(e.target.files[0])}
+              className="hidden"
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="preview"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative glass-card p-4"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <img
+                  src={currentImage.preview}
+                  alt="Preview"
+                  className="w-24 h-24 object-cover rounded-lg border border-white/20"
+                />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h4 className="text-white font-semibold truncate">
+                  {currentImage.name}
+                </h4>
+                <p className="text-white/60 text-sm">
+                  {formatFileSize(currentImage.size)}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-green-300 text-sm">Ready to process</span>
+                </div>
+              </div>
+              
+              <motion.button
+                onClick={() => setCurrentImage(null)}
+                className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <X className="w-5 h-5" />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default FileUpload;
