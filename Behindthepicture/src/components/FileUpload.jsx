@@ -1,52 +1,62 @@
-import React, { useRef } from 'react';
+// src/components/FileUpload.jsx
+
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, FileImage } from 'lucide-react';
 import { useSteganography } from '../context/SteganographyContext';
 
-const FileUpload = ({ type }) => {
+const FileUpload = () => {
   const fileInputRef = useRef(null);
-  const { encodeImage, decodeImage, setEncodeImage, setDecodeImage } = useSteganography();
+  const [isDragOver, setIsDragOver] = useState(false);
   
-  const currentImage = type === 'encode' ? encodeImage : decodeImage;
-  const setCurrentImage = type === 'encode' ? setEncodeImage : setDecodeImage;
+  // Use the context for state management
+  const {
+    originalImage,
+    setOriginalImage,
+    setProcessedImage,
+    setExtractedMessage,
+    setDetectionResults,
+    setStatus,
+    resetState
+  } = useSteganography();
 
   const handleFileSelect = (file) => {
-    if (!file || !file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // Reset all previous results when a new image is uploaded
+        setProcessedImage(null);
+        setExtractedMessage('');
+        setDetectionResults(null);
+        setStatus({ type: '', message: '' });
         
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        setCurrentImage({
-          data: imageData,
-          preview: e.target.result,
-          name: file.name,
-          size: file.size
+        // Set the new image preview URL
+        setOriginalImage({
+            url: e.target.result,
+            name: file.name,
+            size: file.size
         });
       };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
+    } else {
+      setStatus({ type: 'error', message: 'Please select a valid image file.' });
+    }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
+    setIsDragOver(false);
     const file = e.dataTransfer.files[0];
     handleFileSelect(file);
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
   };
 
   const formatFileSize = (bytes) => {
@@ -58,42 +68,30 @@ const FileUpload = ({ type }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <label className="flex items-center gap-2 text-white font-semibold">
-        <ImageIcon className="w-5 h-5" />
-        Select Image
-      </label>
+    <div className="mb-6">
+      <label className="block text-white font-medium mb-3">Select Image</label>
       
       <AnimatePresence mode="wait">
-        {!currentImage ? (
+        {!originalImage ? (
           <motion.div
             key="upload"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="upload-zone p-8 text-center cursor-pointer"
+            className={`relative w-full py-6 px-6 rounded-lg border-2 border-dashed transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer
+              ${isDragOver 
+                ? 'border-blue-500 bg-blue-500/10' 
+                : 'border-gray-500 hover:border-blue-400 hover:bg-gray-700/50'
+              }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
             onClick={() => fileInputRef.current?.click()}
           >
-            <motion.div
-              className="flex flex-col items-center gap-4"
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <div className="p-4 bg-white/10 rounded-full">
-                <Upload className="w-8 h-8 text-white/70" />
-              </div>
-              <div>
-                <p className="text-white font-semibold text-lg mb-2">
-                  Drop your image here or click to browse
-                </p>
-                <p className="text-white/60 text-sm">
-                  Supports PNG, JPG, BMP • Max 10MB
-                </p>
-              </div>
-            </motion.div>
-            
+            <Upload className="w-6 h-6 text-gray-300" />
+            <span className="text-gray-200">
+              {originalImage ? 'Change Image' : 'Upload Image or Drop Here'}
+            </span>
             <input
               ref={fileInputRef}
               type="file"
@@ -108,33 +106,32 @@ const FileUpload = ({ type }) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative glass-card p-4"
+            className="relative bg-gray-700/50 p-4 rounded-lg border border-gray-600"
           >
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <img
-                  src={currentImage.preview}
-                  alt="Preview"
-                  className="w-24 h-24 object-cover rounded-lg border border-white/20"
-                />
-              </div>
-              
+              <img
+                src={originalImage.url}
+                alt="Preview"
+                className="w-20 h-20 object-cover rounded-md border border-gray-500"
+              />
               <div className="flex-1 min-w-0">
                 <h4 className="text-white font-semibold truncate">
-                  {currentImage.name}
+                  {originalImage.name}
                 </h4>
-                <p className="text-white/60 text-sm">
-                  {formatFileSize(currentImage.size)}
+                <p className="text-gray-400 text-sm">
+                  {formatFileSize(originalImage.size)}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   <span className="text-green-300 text-sm">Ready to process</span>
                 </div>
               </div>
-              
               <motion.button
-                onClick={() => setCurrentImage(null)}
-                className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                onClick={() => {
+                  resetState();
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-600 rounded-full transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >

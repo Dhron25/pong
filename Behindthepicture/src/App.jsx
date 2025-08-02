@@ -1,63 +1,57 @@
+// src/App.jsx
+
 import React, { useState } from 'react';
-import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import TabNavigation from './components/TabNavigation';
 import EncodeTab from './components/EncodeTab';
 import DecodeTab from './components/DecodeTab';
-import { SteganographyProvider } from './context/SteganographyContext';
+import { SteganographyProvider, useSteganography } from './context/SteganographyContext';
+
+
+const AppContent = () => {
+  const { activeTab, setActiveTab } = useSteganography();
+  
+
+  return (
+    <>
+      <TabNavigation />
+      <div className="p-8">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {activeTab === 'encode' && <EncodeTab />}
+            {activeTab === 'decode' && <DecodeTab />}
+            {/* The 'detect' tab will be added here later */}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </>
+  );
+};
 
 function App() {
-  const [activeTab, setActiveTab] = useState('encode');
+ 
+  const [darkMode, setDarkMode] = useState(true);
 
   return (
     <SteganographyProvider>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <Header />
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-            
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {activeTab === 'encode' ? <EncodeTab /> : <DecodeTab />}
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-200'} transition-all duration-300`}>
+        <div className="max-w-6xl mx-auto">
+          <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+
+          <main className={`mt-8 mx-4 lg:mx-0 rounded-lg shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+             <AppContent />
+          </main>
         </div>
-        
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-            },
-          }}
-        />
       </div>
     </SteganographyProvider>
   );
 }
 
 export default App;
-
-
-
-
-// 

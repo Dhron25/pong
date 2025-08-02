@@ -1,70 +1,43 @@
+// src/components/Header.jsx
+
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Unlock } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 
-const Header = () => {
+const HideLogo = () => (
+  <div className="flex items-center justify-center w-12 h-12 bg-gray-800 rounded-lg shadow-lg">
+    <div className="relative">
+      <div className="w-6 h-6 border-2 border-gray-400 rounded"></div>
+      <div className="absolute top-1 left-1 w-4 h-4 bg-gray-800 rounded"></div>
+    </div>
+  </div>
+);
+
+const Header = ({ darkMode, setDarkMode }) => {
   return (
-    <motion.header
-      initial={{ opacity: 0, y: -30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-      className="text-center mb-12"
-    >
-      <motion.div
-        className="flex items-center justify-center mb-6"
-        whileHover={{ scale: 1.05 }}
-        transition={{ type: "spring", stiffness: 300 }}
-      >
-        <div className="relative">
-          <Shield className="w-16 h-16 text-purple-400 animate-bounce-gentle" />
-          <motion.div
-            className="absolute -top-2 -right-2"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          >
-            <Lock className="w-6 h-6 text-pink-400" />
-          </motion.div>
+    <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} px-8 py-6 shadow-sm`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <HideLogo />
+          <div>
+            <h1 className={`text-xl sm:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              HideBehindThePicture
+            </h1>
+            <p className={`text-sm sm:text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
+              End-to-end encrypted steganography with detection capabilities
+            </p>
+          </div>
         </div>
-      </motion.div>
-      
-      <motion.h1
-        className="text-5xl md:text-6xl font-bold mb-4 gradient-text"
-        initial={{ scale: 0.8 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-        Steganography Studio
-      </motion.h1>
-      
-      <motion.p
-        className="text-xl text-white/80 font-light"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-      >
-        Hide secrets in plain sight • Advanced image steganography
-      </motion.p>
-      
-      <motion.div
-        className="flex items-center justify-center gap-4 mt-6 text-white/60"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.7 }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="text-sm">Secure</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-          <span className="text-sm">Client-side</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-          <span className="text-sm">Zero-knowledge</span>
-        </div>
-      </motion.div>
-    </motion.header>
+        <motion.button
+          onClick={() => setDarkMode(!darkMode)}
+          className={`p-3 rounded-full transition-colors ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-700" />}
+        </motion.button>
+      </div>
+    </div>
   );
 };
 
