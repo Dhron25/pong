@@ -1,181 +1,160 @@
-import { Download, Lock, Type, Image as ImageIcon, EyeOff } from 'lucide-react';
+// src/components/EncodeTab.jsx
+
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
-import FileUpload from './FileUpload';
 import { useSteganography } from '../context/SteganographyContext';
+import FileUpload from './FileUpload';
+import { Lock, Eye, EyeOff, Download } from 'lucide-react';
 
 const EncodeTab = () => {
-  const [message, setMessage] = useState('');
-  const [password, setPassword] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { encodeImage, resultImage, hideMessage } = useSteganography();
+  // Get all necessary state and functions from the context
+  const {
+    message,
+    setMessage,
+    password,
+    setPassword,
+    encryptionLevel,
+    setEncryptionLevel,
+    hideMessage,
+    isProcessing,
+    processedImage,
+    resetState,
+  } = useSteganography();
 
-  const handleEncode = async () => {
-    if (!message.trim()) {
-      toast.error('Please enter a message to hide');
-      return;
-    }
-    
-    if (!encodeImage) {
-      toast.error('Please upload an image first');
-      return;
-    }
+  const [showPassword, setShowPassword] = useState(false);
 
-    setIsProcessing(true);
-    
-    try {
-      await hideMessage(encodeImage, message, password);
-      toast.success('Message hidden successfully! 🎉');
-    } catch (error) {
-      toast.error('Error hiding message: ' + error.message);
-    } finally {
-      setIsProcessing(false);
+  const downloadImage = () => {
+    if (processedImage) {
+      const link = document.createElement('a');
+      link.href = processedImage;
+      link.download = 'steganography_image.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
-  };
-
-  const handleDownload = () => {
-    if (!resultImage) return;
-    
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = resultImage.width;
-    canvas.height = resultImage.height;
-    ctx.putImageData(resultImage, 0, 0);
-    
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'steganography-image.png';
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Image downloaded! 📥');
-    });
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="glass-card p-8"
-    >
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
-          <EyeOff className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-white">Hide Your Secret</h2>
-          <p className="text-white/70">Embed a message into an image</p>
+    <div>
+      {/* File Upload Component */}
+      <FileUpload />
+
+      {/* Encryption Level */}
+      <div className="mb-6">
+        <label className="block text-white font-medium mb-3">Encryption Level</label>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setEncryptionLevel('AES-256')}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              encryptionLevel === 'AES-256'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-600 hover:bg-gray-700 text-gray-300'
+            }`}
+          >
+            AES-256
+          </button>
+          <button
+            onClick={() => setEncryptionLevel('RSA-2048')}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              encryptionLevel === 'RSA-2048'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-600 hover:bg-gray-700 text-gray-300'
+            }`}
+          >
+            RSA-2048
+          </button>
         </div>
       </div>
 
-      <div className="space-y-6">
-        {/* File Upload */}
-        <FileUpload type="encode" />
+      {/* Message Input */}
+      <div className="mb-6">
+        <label className="block text-white font-medium mb-3">Secret Message</label>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Enter your secret message..."
+          className="w-full bg-gray-700 text-white border-gray-600 p-4 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          rows="4"
+          maxLength="500"
+        />
+        <div className="text-right text-sm text-gray-400 mt-1">
+          {message.length}/500 characters
+        </div>
+      </div>
 
-        {/* Message Input */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <label className="flex items-center gap-2 text-white font-semibold mb-3">
-            <Type className="w-5 h-5" />
-            Secret Message
-          </label>
-          <div className="relative">
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Enter your secret message here..."
-              className="w-full p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 resize-none h-32 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300"
-              maxLength={1000}
-            />
-            <div className="absolute bottom-3 right-3 text-white/50 text-sm">
-              {message.length}/1000
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Password Input */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <label className="flex items-center gap-2 text-white font-semibold mb-3">
-            <Lock className="w-5 h-5" />
-            Password (Optional)
-          </label>
+      {/* Password Input */}
+      <div className="mb-6">
+        <label className="block text-white font-medium mb-3">Password</label>
+        <div className="relative">
           <input
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Add password for extra security"
-            className="w-full p-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300"
+            placeholder="Enter secure password..."
+            className="w-full bg-gray-700 text-white border-gray-600 p-4 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
           />
-        </motion.div>
-
-        {/* Action Buttons */}
-        <motion.div
-          className="flex gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <motion.button
-            onClick={handleEncode}
-            disabled={isProcessing || !message.trim() || !encodeImage}
-            className="flex-1 flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
-            {isProcessing ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <EyeOff className="w-5 h-5" />
-                Hide Message
-              </>
-            )}
-          </motion.button>
-
-          {resultImage && (
-            <motion.button
-              onClick={handleDownload}
-              className="flex items-center justify-center gap-3 py-4 px-6 glass-button text-white font-semibold"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              <Download className="w-5 h-5" />
-              Download
-            </motion.button>
-          )}
-        </motion.div>
-
-        {/* Success Message */}
-        {resultImage && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-green-500/20 border border-green-500/30 rounded-xl text-center"
-          >
-            <p className="text-green-300 font-semibold">
-              ✅ Message successfully hidden in the image!
-            </p>
-            <p className="text-green-300/70 text-sm mt-1">
-              Download the image and share it securely
-            </p>
-          </motion.div>
-        )}
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
-    </motion.div>
+
+      {/* Action Buttons */}
+      <div className="space-y-3">
+        <button
+          onClick={hideMessage}
+          disabled={isProcessing}
+          className={`w-full py-4 px-6 rounded-lg font-bold text-lg transition-all duration-200 flex items-center justify-center gap-3
+            ${isProcessing
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+            }`}
+        >
+          {isProcessing ? (
+            <>
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Lock className="w-5 h-5" />
+              Encrypt & Hide Message
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={resetState}
+          className="w-full py-3 px-6 rounded-lg font-medium bg-gray-700 hover:bg-gray-600 text-white transition-all duration-200"
+        >
+          Reset
+        </button>
+      </div>
+
+      {/* Processed Image Result */}
+      {processedImage && (
+        <div className="mt-8">
+            <h3 className="font-medium text-white mb-2">Encrypted Image</h3>
+            <div className="flex items-center justify-center p-4 bg-gray-900/50 rounded-lg">
+                <img
+                    src={processedImage}
+                    alt="Processed"
+                    className="max-h-64 object-contain rounded-md"
+                />
+            </div>
+            <button
+                onClick={downloadImage}
+                className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors font-semibold"
+            >
+                <Download className="w-4 h-4" />
+                Download Image
+            </button>
+        </div>
+      )}
+    </div>
   );
 };
 
