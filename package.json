@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "exif-js": "^2.3.0",
+    "exifreader": "^4.31.1",
+    "heic2any": "^0.0.4"
+  }
+}

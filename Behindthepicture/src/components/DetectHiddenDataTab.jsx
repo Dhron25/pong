@@ -1,5 +1,3 @@
-// src/components/DetectHiddenDataTab.jsx
-
 import React from 'react';
 import { useSteganography } from '../context/SteganographyContext';
 import FileUpload from './FileUpload';
@@ -12,7 +10,8 @@ const DetectHiddenDataTab = () => {
     isProcessing,
     detectHiddenData,
     detectionResults,
-    resetState
+    resetState,
+    exifData
   } = useSteganography();
   
   const getLikelihoodColor = (likelihood) => {
@@ -59,58 +58,70 @@ const DetectHiddenDataTab = () => {
         </button>
       </div>
 
-      {detectionResults && (
+      {(detectionResults || exifData) && (
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-8 space-y-4"
         >
             <h3 className="font-medium text-white mb-2">Analysis Results</h3>
-            {originalImage && (
-                <div className="flex items-center justify-center p-4 bg-gray-900/50 rounded-lg">
-                    <img
-                        src={originalImage.url}
-                        alt="Analyzed"
-                        className="max-h-48 object-contain rounded-md"
-                    />
+            
+            {exifData && (
+              <div className="p-4 rounded-lg bg-gray-700/50 border border-gray-600">
+                <h4 className="font-medium text-white mb-3">EXIF Metadata</h4>
+                <div className="max-h-48 overflow-y-auto text-sm pr-2">
+                  <table className="w-full">
+                    <tbody>
+                      {Object.entries(exifData).map(([key, value]) => (
+                        <tr key={key} className="border-b border-gray-600/50">
+                          <td className="py-1.5 pr-2 font-semibold text-gray-300 align-top">{key}</td>
+                          <td className="py-1.5 text-white whitespace-pre-wrap break-words">{String(value)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {detectionResults && (
+                <div className="p-4 rounded-lg bg-gray-700/50 border border-gray-600">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-sm text-gray-400">Likelihood</p>
+                            <p className={`text-lg font-bold ${getLikelihoodColor(detectionResults.likelihood)}`}>
+                                {detectionResults.likelihood}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-400">Confidence</p>
+                            <p className="text-lg font-bold text-white">{detectionResults.confidence}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-400">Suspicion Score</p>
+                            <p className="text-lg font-bold text-white">{detectionResults.suspicionScore}/100</p>
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-400">LSB 1s Ratio</p>
+                            <p className="text-lg font-bold text-white">{detectionResults.lsbRatio}%</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-600">
+                        <h4 className="font-medium text-white mb-2">Technical Details</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div><span className="text-gray-400">Total Pixels: </span><span className="text-white">{detectionResults.totalPixels.toLocaleString()}</span></div>
+                            <div><span className="text-gray-400">Color Variance: </span><span className="text-white">{detectionResults.variance}</span></div>
+                            <div><span className="text-gray-400">Seq. Patterns: </span><span className="text-white">{detectionResults.sequentialPatterns}</span></div>
+                            <div><span className="text-gray-400">LSB Deviation: </span><span className="text-white">{detectionResults.details.lsbDeviation}%</span></div>
+                        </div>
+                    </div>
                 </div>
             )}
-            <div className="p-4 rounded-lg bg-gray-700/50 border border-gray-600">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-sm text-gray-400">Likelihood</p>
-                        <p className={`text-lg font-bold ${getLikelihoodColor(detectionResults.likelihood)}`}>
-                            {detectionResults.likelihood}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-sm text-gray-400">Confidence</p>
-                        <p className="text-lg font-bold text-white">{detectionResults.confidence}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm text-gray-400">Suspicion Score</p>
-                        <p className="text-lg font-bold text-white">{detectionResults.suspicionScore}/100</p>
-                    </div>
-                    <div>
-                        <p className="text-sm text-gray-400">LSB 1s Ratio</p>
-                        <p className="text-lg font-bold text-white">{detectionResults.lsbRatio}%</p>
-                    </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-gray-600">
-                    <h4 className="font-medium text-white mb-2">Technical Details</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div><span className="text-gray-400">Total Pixels: </span><span className="text-white">{detectionResults.totalPixels.toLocaleString()}</span></div>
-                        <div><span className="text-gray-400">Color Variance: </span><span className="text-white">{detectionResults.variance}</span></div>
-                        <div><span className="text-gray-400">Seq. Patterns: </span><span className="text-white">{detectionResults.sequentialPatterns}</span></div>
-                        <div><span className="text-gray-400">LSB Deviation: </span><span className="text-white">{detectionResults.details.lsbDeviation}%</span></div>
-                    </div>
-                </div>
-            </div>
         </motion.div>
       )}
 
-      {!originalImage && !detectionResults && (
+      {!originalImage && !detectionResults && !exifData && (
          <div className="mt-8 flex flex-col items-center justify-center h-64 bg-gray-700/30 rounded-lg border-2 border-dashed border-gray-600">
             <FileImage className="w-12 h-12 text-gray-500 mx-auto mb-2" />
             <p className="text-gray-500">Upload an image to analyze</p>
