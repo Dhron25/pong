@@ -6,8 +6,7 @@ export default {
   ],
   theme: {
     extend: {
-      // ADDED a custom color for our glass card borders
-      colors: {
+          colors: {
         border: 'rgba(255, 255, 255, 0.2)',
       },
       animation: {

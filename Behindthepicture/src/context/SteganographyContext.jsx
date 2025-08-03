@@ -2,10 +2,12 @@ import React, { createContext, useContext, useState, useRef } from 'react';
 
 const SteganographyContext = createContext();
 
-
+// Custom hook to use the context easily in other components
 export const useSteganography = () => useContext(SteganographyContext);
 
+// --- Helper functions (logic extracted from SteganographyTool.jsx) ---
 
+// Enhanced hash function
 const hashPassword = (password) => {
   let hash = 5381;
   for (let i = 0; i < password.length; i++) {
@@ -14,6 +16,7 @@ const hashPassword = (password) => {
   return Math.abs(hash);
 };
 
+// Pseudo-random number generator with seed
 const createRNG = (seed) => {
   let state = seed;
   return () => {
@@ -104,7 +107,6 @@ const calculateVariance = (values) => {
 
 // --- The Provider Component ---
 export const SteganographyProvider = ({ children }) => {
-  // State variables
   const [activeTab, setActiveTab] = useState('encode');
   const [message, setMessage] = useState('');
   const [password, setPassword] = useState('');
@@ -119,7 +121,6 @@ export const SteganographyProvider = ({ children }) => {
   const canvasRef = useRef(null);
 
   const resetState = () => {
-  
     setOriginalImage(null);
     setProcessedImage(null);
     setMessage('');
@@ -144,7 +145,7 @@ export const SteganographyProvider = ({ children }) => {
     setProcessedImage(null);
 
     try {
-      const currentEncryptionLevel = encryptionLevel.split('-')[0]; // 'AES' or 'RSA'
+      const currentEncryptionLevel = encryptionLevel.split('-')[0];
       let encryptedMessage;
       if (currentEncryptionLevel === 'AES') {
         encryptedMessage = simpleAESEncrypt(message, password);
@@ -315,8 +316,98 @@ export const SteganographyProvider = ({ children }) => {
   };
 
   const detectHiddenData = async () => {
-    // This will be implemented in the next step
-    console.log("detectHiddenData called");
+    if (!originalImage) {
+      setStatus({ type: 'error', message: 'Please upload an image first.' });
+      return;
+    }
+
+    setIsProcessing(true);
+    setDetectionResults(null);
+    setStatus({ type: '', message: '' });
+
+    try {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        let lsbAnalysis = { zeros: 0, ones: 0 };
+        let colorChannelVariations = { r: [], g: [], b: [] };
+        
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i] & 1;
+          const g = data[i + 1] & 1;
+          const b = data[i + 2] & 1;
+          
+          lsbAnalysis.zeros += (r === 0 ? 1 : 0) + (g === 0 ? 1 : 0) + (b === 0 ? 1 : 0);
+          lsbAnalysis.ones += (r === 1 ? 1 : 0) + (g === 1 ? 1 : 0) + (b === 1 ? 1 : 0);
+          
+          colorChannelVariations.r.push(data[i]);
+          colorChannelVariations.g.push(data[i + 1]);
+          colorChannelVariations.b.push(data[i + 2]);
+        }
+
+        const totalLSB = lsbAnalysis.zeros + lsbAnalysis.ones;
+        const lsbRatio = lsbAnalysis.ones / totalLSB;
+        const deviation = Math.abs(lsbRatio - 0.5);
+        
+        let sequentialPatterns = 0;
+        for (let i = 0; i < data.length - 12; i += 4) {
+          const p1 = (data[i]&1) + (data[i+1]&1) + (data[i+2]&1);
+          const p2 = (data[i+4]&1) + (data[i+5]&1) + (data[i+6]&1);
+          if (p1 === p2) sequentialPatterns++;
+        }
+
+        let suspicionScore = 0;
+        if (deviation > 0.025) suspicionScore += (deviation - 0.025) * 1000;
+        if (sequentialPatterns > (data.length / 120)) suspicionScore += 25;
+        
+        const rVariance = calculateVariance(colorChannelVariations.r);
+        const gVariance = calculateVariance(colorChannelVariations.g);
+        const bVariance = calculateVariance(colorChannelVariations.b);
+        const avgVariance = (rVariance + gVariance + bVariance) / 3;
+        
+        if (avgVariance < 100) suspicionScore += 15;
+        if (avgVariance > 10000) suspicionScore += 10;
+        suspicionScore = Math.min(100, Math.floor(suspicionScore));
+
+        let likelihood = 'Clean';
+        let confidence = 'High';
+        
+        if (suspicionScore > 70) { likelihood = 'Very Likely'; confidence = 'High'; }
+        else if (suspicionScore > 50) { likelihood = 'Likely'; confidence = 'Medium'; }
+        else if (suspicionScore > 30) { likelihood = 'Possible'; confidence = 'Low'; }
+        else if (suspicionScore > 15) { likelihood = 'Unlikely'; confidence = 'Medium'; }
+
+        setDetectionResults({
+          likelihood,
+          confidence,
+          suspicionScore,
+          lsbRatio: (lsbRatio * 100).toFixed(2),
+          sequentialPatterns,
+          totalPixels: data.length / 4,
+          variance: avgVariance.toFixed(2),
+          details: {
+            lsbDeviation: (deviation * 100).toFixed(3)
+          }
+        });
+
+        setIsProcessing(false);
+        setStatus({ type: 'success', message: 'Image analysis complete.' });
+      };
+      
+      img.src = originalImage.url;
+    } catch (error) {
+      setStatus({ type: 'error', message: 'Error analyzing image.' });
+      setIsProcessing(false);
+    }
   };
 
   // The value that will be available to all consumer components
@@ -351,7 +442,7 @@ export const SteganographyProvider = ({ children }) => {
   return (
     <SteganographyContext.Provider value={value}>
       {children}
-      {}
+      {/* Hidden canvas for processing */}
       <canvas ref={canvasRef} className="hidden" />
     </SteganographyContext.Provider>
   );
