@@ -3,18 +3,22 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    @apply bg-gray-900; /* SETS THE GLOBAL BACKGROUND TO DARK */
+  }
+
   * {
     @apply border-border;
   }
   
   body {
-    /* REMOVED the static background here. We will apply it in App.jsx */
     @apply min-h-screen font-sans antialiased;
     background-attachment: fixed;
   }
 }
 
 @layer components {
+  /* ... The rest of this file remains the same ... */
   .glass-card {
     @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl;
   }

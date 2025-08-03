@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+// src/App.jsx
+
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import TabNavigation from './components/TabNavigation';
@@ -8,7 +10,6 @@ import DetectHiddenDataTab from './components/DetectHiddenDataTab';
 import { SteganographyProvider, useSteganography } from './context/SteganographyContext';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
-// This component now also handles displaying status messages from the context.
 const AppContent = () => {
   const { activeTab, status } = useSteganography();
 
@@ -16,7 +17,6 @@ const AppContent = () => {
     <>
       <TabNavigation />
       <div className="p-8">
-        {/* Status Messages */}
         {status.message && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -55,15 +55,16 @@ const AppContent = () => {
 };
 
 function App() {
-  const [darkMode, setDarkMode] = useState(true);
-
+  // All darkMode state has been removed.
   return (
     <SteganographyProvider>
-      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-200'} transition-all duration-300`}>
+      {/* The main div no longer needs background classes, as it's handled by index.css */}
+      <div className="min-h-screen">
         <div className="max-w-6xl mx-auto pb-12">
-          <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-
-          <main className={`mt-8 mx-4 lg:mx-0 rounded-lg shadow-2xl overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          {/* No more props passed to Header */}
+          <Header />
+          {/* Main container is now permanently dark */}
+          <main className="mt-8 mx-4 lg:mx-0 rounded-lg shadow-2xl overflow-hidden bg-gray-800">
              <AppContent />
           </main>
         </div>

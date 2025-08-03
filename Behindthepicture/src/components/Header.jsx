@@ -1,42 +1,44 @@
 // src/components/Header.jsx
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Moon, Sun } from 'lucide-react';
 
-const HideLogo = () => (
-  <div className="flex items-center justify-center w-12 h-12 bg-gray-800 rounded-lg shadow-lg">
-    <div className="relative">
-      <div className="w-6 h-6 border-2 border-gray-400 rounded"></div>
-      <div className="absolute top-1 left-1 w-4 h-4 bg-gray-800 rounded"></div>
-    </div>
+
+const NewLogo = () => (
+  <div className="flex items-center gap-3">
+    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="45" stroke="black" strokeWidth="10"/>
+        <circle cx="50" cy="50" r="30" stroke="black" strokeWidth="10"/>
+        <circle cx="50" cy="50" r="15" stroke="black" strokeWidth="10"/>
+    </svg>
+    <span className="text-2xl font-bold tracking-tight text-black">
+      BehindthePicture
+    </span>
   </div>
 );
 
-const Header = ({ darkMode, setDarkMode }) => {
+// Simplified Header for dark mode only
+const Header = () => {
   return (
-    <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} px-8 py-6 shadow-sm`}>
+    <div className="bg-gray-800 px-8 py-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <HideLogo />
-          <div>
-            <h1 className={`text-xl sm:text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              HideBehindThePicture
-            </h1>
-            <p className={`text-sm sm:text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
-              End-to-end encrypted steganography with detection capabilities
-            </p>
+           {/* The HideBehindThePicture logo from the very first image */}
+           <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gray-800 rounded-md flex items-center justify-center border-2 border-gray-700">
+              <div className="w-6 h-6 border-2 border-gray-500 rounded-sm"></div>
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-3xl font-bold text-white">
+                HideBehindThePicture
+              </h1>
+            </div>
           </div>
         </div>
-        <motion.button
-          onClick={() => setDarkMode(!darkMode)}
-          className={`p-3 rounded-full transition-colors ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-700" />}
-        </motion.button>
+        {/* The light/dark mode toggle button has been removed */}
       </div>
+       <p className="text-sm sm:text-lg text-gray-300 mt-2">
+          End-to-end encrypted steganography with detection capabilities
+        </p>
     </div>
   );
 };
