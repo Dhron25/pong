@@ -1,5 +1,3 @@
-// src/components/TabNavigation.jsx
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Unlock, Search } from 'lucide-react';
@@ -11,7 +9,8 @@ const TabNavigation = () => {
   const tabs = [
     { id: 'encode', label: 'Hide Message', icon: Lock },
     { id: 'decode', label: 'Extract Message', icon: Unlock },
-    { id: 'detect', label: 'Detect Hidden Data', icon: Search },
+    
+    { id: 'detect', label: 'Detect Hidden Data (Beta)', icon: Search },
   ];
 
   return (
